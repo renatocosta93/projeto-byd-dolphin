@@ -2,9 +2,10 @@ import os
 import json
 import urllib.request
 
-BOT_TOKEN = os.environ['TELEGRAM_TOKEN']
-CHAT_ID = os.environ['TELEGRAM_CHAT_ID']
-PANEL_URL = os.environ['PANEL_URL'] 
+# O comando .strip() remove qualquer espaço invisível copiado sem querer pelo celular
+BOT_TOKEN = os.environ['TELEGRAM_TOKEN'].strip()
+CHAT_ID = os.environ['TELEGRAM_CHAT_ID'].strip()
+PANEL_URL = os.environ['PANEL_URL'].strip()
 
 try:
     with open('last_message_id.txt', 'r') as f:
