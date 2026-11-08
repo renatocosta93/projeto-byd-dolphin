@@ -6,7 +6,6 @@
     <title>Painel BYD Dolphin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos para os botões de seleção de recarga */
         .btn-radio { transition: all 0.2s; }
         .btn-radio.active { border-color: #059669; background-color: #ecfdf5; color: #065f46; font-weight: bold; }
     </style>
@@ -16,17 +15,18 @@
         
         <!-- CABEÇALHO -->
         <div class="bg-white p-4 text-center shadow-sm border-b border-gray-200 flex justify-center items-center gap-3 sticky top-0 z-10">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/f/f4/BYD_logo.svg" alt="BYD" class="h-5">
+            <!-- Logo BYD feita em CSS (Não quebra) -->
+            <div class="text-red-600 font-black italic text-2xl tracking-tighter">BYD</div>
             <div class="h-6 w-px bg-gray-300"></div>
             <h1 class="text-lg font-bold text-gray-700 tracking-wide">Painel Dolphin</h1>
         </div>
 
         <!-- 1. ACUMULADO GERAL -->
         <div class="m-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">💰 Acumulado Histórico</h2>
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">💰 Gasto Acumulado</h2>
             <div class="flex justify-between items-end mb-3">
                 <div>
-                    <p class="text-sm text-gray-500 mb-1">Gasto no Dolphin (EV)</p>
+                    <p class="text-sm text-gray-500 mb-1">Gasto Recargas (EV)</p>
                     <p class="text-xl font-bold text-gray-800">R$ <span id="valGastoEV">0,00</span></p>
                 </div>
                 <div class="text-right">
@@ -40,13 +40,13 @@
             </div>
         </div>
 
-        <!-- 2. DEMONSTRATIVO DA ÚLTIMA VIAGEM -->
+        <!-- 2. ACOMPANHAMENTO: ÚLTIMA VIAGEM -->
         <div class="m-4 bg-gray-800 text-white p-5 rounded-2xl shadow-md relative overflow-hidden">
             <div class="absolute top-0 right-0 p-3 opacity-20 text-4xl">🚗</div>
-            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">📊 Última Viagem Registrada</h2>
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">📊 Desempenho da Última Rota</h2>
             
             <div id="boxSemViagem" class="text-sm text-gray-400 italic py-2">
-                Nenhuma viagem registrada ainda.
+                Nenhuma viagem registrada.
             </div>
 
             <div id="boxUltimaViagem" class="hidden">
@@ -61,11 +61,12 @@
                     </div>
                 </div>
                 
-                <!-- Avaliação de Desempenho -->
-                <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
-                    <p class="text-xs text-gray-300 mb-1">Sua eficiência foi de <strong id="uvEficiencia">0</strong> km/kWh</p>
-                    <div id="uvDesempenho" class="text-sm font-medium flex items-center gap-1">
-                        <!-- Preenchido via JS -->
+                <!-- Avaliação de Desempenho (BYD vs Gasolina) -->
+                <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600 text-sm">
+                    <p class="mb-1"><span class="text-gray-400">Consumo BYD:</span> <strong id="uvEficienciaEV">0</strong> <span class="text-xs">kWh/100km</span></p>
+                    <p class="mb-1"><span class="text-gray-400">Ref. Gasolina:</span> <strong id="uvEficienciaGas">0</strong> <span class="text-xs">L/100km</span></p>
+                    <div class="mt-2 pt-2 border-t border-gray-600">
+                        <p class="text-xs text-emerald-400">Você gastou <strong id="uvKwhUsados">0</strong> kWh contra <strong id="uvLitrosUsados">0</strong> Litros de combustível.</p>
                     </div>
                 </div>
             </div>
@@ -73,15 +74,15 @@
 
         <!-- 3. MÓDULO DE RECARGA -->
         <div class="m-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-            <h2 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><span>🔌</span> Registrar Recarga</h2>
+            <h2 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><span>🔌</span> 1. Incluir Recarga</h2>
             
             <div class="mb-4">
-                <label class="block text-xs font-semibold text-gray-500 mb-2">Quantos kWh foram injetados?</label>
-                <input type="number" id="injetado" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-xl font-bold text-center focus:border-blue-500 outline-none" placeholder="Ex: 15.5">
+                <label class="block text-xs font-semibold text-gray-500 mb-2">Energia Injetada (kWh)</label>
+                <input type="number" id="injetado" oninput="calcularPreviaRecarga()" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-xl font-bold text-center focus:border-blue-500 outline-none" placeholder="Ex: 15.5">
             </div>
 
             <div class="mb-4">
-                <label class="block text-xs font-semibold text-gray-500 mb-2">Onde você carregou?</label>
+                <label class="block text-xs font-semibold text-gray-500 mb-2">Origem da Carga</label>
                 <div class="grid grid-cols-3 gap-2">
                     <div onclick="selecionarOrigem('solar', 0.00)" id="btnSolar" class="btn-radio active cursor-pointer border border-gray-300 rounded-lg p-2 text-center">
                         <div class="text-lg">☀️</div><div class="text-xs mt-1">Solar<br><span class="font-normal text-gray-400">R$ 0,00</span></div>
@@ -90,71 +91,92 @@
                         <div class="text-lg">🌙</div><div class="text-xs mt-1">Rede<br><span class="font-normal text-gray-400">R$ 0,85</span></div>
                     </div>
                     <div onclick="selecionarOrigem('posto', 0)" id="btnPosto" class="btn-radio cursor-pointer border border-gray-300 rounded-lg p-2 text-center">
-                        <div class="text-lg">🔌</div><div class="text-xs mt-1">Posto<br><span class="font-normal text-gray-400">Variável</span></div>
+                        <div class="text-lg">🔌</div><div class="text-xs mt-1">Posto<br><span class="font-normal text-gray-400">Digitar</span></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Campo dinâmico do Eletroposto -->
             <div id="campoPrecoPosto" class="hidden mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <label class="block text-xs font-semibold text-blue-800 mb-1">Qual o valor do kWh neste posto? (R$)</label>
-                <input type="number" id="tarifaPersonalizada" class="w-full p-2 border border-blue-200 rounded bg-white text-lg font-bold text-blue-900" placeholder="Ex: 2.10">
+                <label class="block text-xs font-semibold text-blue-800 mb-1">Valor do kWh (R$)</label>
+                <input type="number" id="tarifaPersonalizada" oninput="calcularPreviaRecarga()" class="w-full p-2 border border-blue-200 rounded bg-white text-lg font-bold text-blue-900" placeholder="Ex: 2.10">
+            </div>
+
+            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg mb-4 border border-gray-100">
+                <span class="text-xs font-bold text-gray-500 uppercase">Custo desta carga:</span>
+                <span class="text-lg font-black text-blue-600">R$ <span id="previaCustoRecarga">0,00</span></span>
             </div>
 
             <button onclick="salvarRecarga()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-sm hover:bg-blue-700 active:scale-95 transition-all">
-                Salvar Custo da Recarga
+                Gravar Recarga
             </button>
         </div>
 
-        <!-- 4. MÓDULO DE VIAGEM / RODAGEM -->
+        <!-- 4. MÓDULO DE VIAGEM -->
         <div class="m-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-            <h2 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><span>🚗</span> Registrar Viagem</h2>
+            <h2 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><span>🚗</span> 2. Incluir Rota/Uso</h2>
             
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1">Km Rodados</label>
-                    <input type="number" id="kmRodados" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-lg font-bold text-center" placeholder="Ex: 120">
+                    <input type="number" id="kmRodados" oninput="calcularPreviaViagem()" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-lg font-bold text-center" placeholder="Ex: 50">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 mb-1">Média no Painel (km/kWh)</label>
-                    <input type="number" id="eficienciaTrip" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-lg font-bold text-center" placeholder="Ex: 11.5">
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">Média (kWh/100km)</label>
+                    <input type="number" id="eficienciaTrip" oninput="calcularPreviaViagem()" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-lg font-bold text-center" placeholder="Ex: 12.7">
                 </div>
             </div>
 
             <div class="mb-4 bg-orange-50 p-3 rounded-lg border border-orange-100">
-                <label class="block text-xs font-semibold text-orange-800 mb-1">Preço da Gasolina Hoje (Referência)</label>
+                <label class="block text-xs font-semibold text-orange-800 mb-1">Preço da Gasolina Hoje</label>
                 <div class="flex items-center gap-2">
                     <span class="text-orange-600 font-bold">R$</span>
-                    <input type="number" id="precoGas" class="w-full p-2 border border-orange-200 rounded bg-white text-lg font-bold" value="5.79">
+                    <input type="number" id="precoGas" oninput="calcularPreviaViagem()" class="w-full p-2 border border-orange-200 rounded bg-white text-lg font-bold" value="5.79">
                 </div>
             </div>
 
+            <!-- Visor Dinâmico do Gasto de Potência -->
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mb-4 text-sm text-gray-600 hidden" id="visorPotencia">
+                Consumo de potência: <strong class="text-gray-800"><span id="previaKwh">0.00</span> kWh</strong><br>
+                Gasto simulado (Combustão): <strong class="text-orange-600">R$ <span id="previaGastoGasolina">0.00</span></strong>
+            </div>
+
             <button onclick="salvarViagem()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg shadow-sm hover:bg-emerald-700 active:scale-95 transition-all">
-                Salvar Viagem e Economia
+                Gravar Economia
             </button>
+        </div>
+
+        <!-- 5. HISTÓRICO COM EXCLUSÃO -->
+        <div class="m-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+            <h2 class="font-bold text-gray-700 mb-4 flex items-center">📜 Histórico Detalhado</h2>
+            <div id="listaHistorico" class="space-y-3">
+                <!-- Registros via JS -->
+            </div>
         </div>
 
     </div>
 
     <script>
-        // DADOS DO TELEGRAM
         const TELEGRAM_TOKEN = "9273439983:AAHIS4JHsG77p7g5R1B-RVQiyacRibGJhIw";
         const CHAT_ID = "1020154663";
         
-        // Padrões do Carro
-        const MEDIA_PADRAO_EV = 11.5; 
-        const MEDIA_PADRAO_GAS = 12.0;
+        const REF_KM_L_GASOLINA = 12.0; 
+        const LITROS_POR_100KM = 100 / REF_KM_L_GASOLINA; // 8.33 L/100km
 
-        // Banco de Dados Local
-        let db = JSON.parse(localStorage.getItem('byd_app_data_v2')) || {
+        // Usando uma nova chave para garantir que o banco limpe dados antigos incompativeis
+        let db = JSON.parse(localStorage.getItem('byd_app_v3')) || {
             gastoEV: 0,
             gastoGas: 0,
             ultimaTarifa: 0.00,
             origemSelecionada: 'solar',
-            ultimaViagem: null
+            ultimaViagem: null,
+            historico: []
         };
 
-        // Funções de Interface
+        function formatarData() {
+            const ag = new Date();
+            return ag.toLocaleDateString('pt-BR') + ' ' + ag.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+        }
+
         function selecionarOrigem(origem, valor) {
             document.getElementById('btnSolar').classList.remove('active');
             document.getElementById('btnRede').classList.remove('active');
@@ -170,41 +192,114 @@
                 document.getElementById('campoPrecoPosto').classList.remove('hidden');
             } else {
                 document.getElementById('campoPrecoPosto').classList.add('hidden');
-                document.getElementById('tarifaPersonalizada').value = '';
+            }
+            calcularPreviaRecarga();
+        }
+
+        function recalcularTotais() {
+            db.gastoEV = 0;
+            db.gastoGas = 0;
+            
+            db.historico.forEach(item => {
+                if(item.tipo === 'Recarga') db.gastoEV += item.custoEletrico;
+                if(item.tipo === 'Viagem') db.gastoGas += item.custoGasolina;
+            });
+            
+            localStorage.setItem('byd_app_v3', JSON.stringify(db));
+            atualizarTela();
+        }
+
+        function excluirRegistro(id) {
+            if(confirm("Tem certeza que deseja apagar este registro? Os valores serão recalculados.")) {
+                db.historico = db.historico.filter(item => item.id !== id);
+                recalcularTotais();
             }
         }
 
         function atualizarTela() {
-            // 1. Atualiza Acumulado
             let economiaTotal = db.gastoGas - db.gastoEV;
-            if (economiaTotal < 0) economiaTotal = 0;
-
+            
             document.getElementById('valGastoEV').innerText = db.gastoEV.toFixed(2).replace('.', ',');
             document.getElementById('valGastoGas').innerText = db.gastoGas.toFixed(2).replace('.', ',');
             document.getElementById('valEconomia').innerText = economiaTotal.toFixed(2).replace('.', ',');
 
-            // 2. Atualiza Última Viagem
             if (db.ultimaViagem) {
                 document.getElementById('boxSemViagem').classList.add('hidden');
                 document.getElementById('boxUltimaViagem').classList.remove('hidden');
                 
                 document.getElementById('uvKm').innerText = db.ultimaViagem.km;
                 document.getElementById('uvEcon').innerText = db.ultimaViagem.economia.toFixed(2).replace('.', ',');
-                document.getElementById('uvEficiencia').innerText = db.ultimaViagem.eficiencia;
+                document.getElementById('uvEficienciaEV').innerText = db.ultimaViagem.eficienciaEV;
+                document.getElementById('uvEficienciaGas').innerText = LITROS_POR_100KM.toFixed(2);
+                document.getElementById('uvKwhUsados').innerText = db.ultimaViagem.kwhUsados.toFixed(2);
+                document.getElementById('uvLitrosUsados').innerText = db.ultimaViagem.litrosUsados.toFixed(2);
+            } else {
+                document.getElementById('boxSemViagem').classList.remove('hidden');
+                document.getElementById('boxUltimaViagem').classList.add('hidden');
+            }
 
-                let desc = document.getElementById('uvDesempenho');
-                let diferenca = ((db.ultimaViagem.eficiencia - MEDIA_PADRAO_EV) / MEDIA_PADRAO_EV) * 100;
+            renderizarHistorico();
+        }
+
+        function renderizarHistorico() {
+            const lista = document.getElementById('listaHistorico');
+            lista.innerHTML = '';
+            
+            if(db.historico.length === 0) {
+                lista.innerHTML = '<p class="text-sm text-gray-400 italic text-center py-2">Sem registros.</p>';
+                return;
+            }
+
+            const historicoInvertido = [...db.historico].reverse();
+
+            historicoInvertido.forEach(item => {
+                const isRecarga = item.tipo === 'Recarga';
+                const corIcone = isRecarga ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600';
+                const icone = isRecarga ? '🔌' : '🚗';
+                const info = isRecarga ? `R$ ${item.custoEletrico.toFixed(2)}` : `Gasto Simulado: R$ ${item.custoGasolina.toFixed(2)}`;
+
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center p-3 bg-gray-50 border border-gray-100 rounded-lg";
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full ${corIcone} flex items-center justify-center text-sm flex-shrink-0">${icone}</div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-700">${item.tipo} <span class="font-normal text-xs text-gray-400 ml-1">(${item.data})</span></p>
+                            <p class="text-xs text-gray-500">${item.detalhe}</p>
+                            <p class="text-xs font-semibold text-gray-700 mt-0.5">${info}</p>
+                        </div>
+                    </div>
+                    <button onclick="excluirRegistro(${item.id})" class="p-2 text-red-400 hover:text-red-600 bg-red-50 rounded-lg active:scale-90 transition-all">
+                        🗑️
+                    </button>
+                `;
+                lista.appendChild(div);
+            });
+        }
+
+        function calcularPreviaRecarga() {
+            let kwh = parseFloat(document.getElementById('injetado').value) || 0;
+            let tarifa = db.ultimaTarifa;
+            if (db.origemSelecionada === 'posto') {
+                tarifa = parseFloat(document.getElementById('tarifaPersonalizada').value) || 0;
+            }
+            document.getElementById('previaCustoRecarga').innerText = (kwh * tarifa).toFixed(2).replace('.', ',');
+        }
+
+        function calcularPreviaViagem() {
+            let km = parseFloat(document.getElementById('kmRodados').value);
+            let kwh100 = parseFloat(document.getElementById('eficienciaTrip').value);
+            let precoGas = parseFloat(document.getElementById('precoGas').value) || 0;
+
+            if (km && kwh100) {
+                document.getElementById('visorPotencia').classList.remove('hidden');
+                let potencia = (kwh100 / 100) * km;
+                let custoGasolina = (km / REF_KM_L_GASOLINA) * precoGas;
                 
-                if (diferenca > 0) {
-                    desc.innerHTML = `🟢 Você rendeu ${diferenca.toFixed(1)}% a mais que a média!`;
-                    desc.className = "text-sm font-medium flex items-center gap-1 text-emerald-400";
-                } else if (diferenca < 0) {
-                    desc.innerHTML = `🔴 Você gastou ${Math.abs(diferenca).toFixed(1)}% a mais de bateria.`;
-                    desc.className = "text-sm font-medium flex items-center gap-1 text-red-400";
-                } else {
-                    desc.innerHTML = `⚪ Desempenho exatamente na média.`;
-                    desc.className = "text-sm font-medium flex items-center gap-1 text-gray-400";
-                }
+                document.getElementById('previaKwh').innerText = potencia.toFixed(2);
+                document.getElementById('previaGastoGasolina').innerText = custoGasolina.toFixed(2).replace('.', ',');
+            } else {
+                document.getElementById('visorPotencia').classList.add('hidden');
             }
         }
 
@@ -215,59 +310,72 @@
             let tarifaFinal = db.ultimaTarifa;
             if (db.origemSelecionada === 'posto') {
                 tarifaFinal = parseFloat(document.getElementById('tarifaPersonalizada').value);
-                if (!tarifaFinal) return alert("Digite o valor do kWh cobrado no posto.");
-                db.ultimaTarifa = tarifaFinal; // Memoriza caso a próxima viagem seja baseada nisso
+                if (!tarifaFinal) return alert("Digite o valor do kWh.");
+                db.ultimaTarifa = tarifaFinal; 
             }
 
             let custoRecarga = kwh * tarifaFinal;
-            db.gastoEV += custoRecarga;
             
-            localStorage.setItem('byd_app_data_v2', JSON.stringify(db));
-            atualizarTela();
-            
+            db.historico.push({
+                id: Date.now(),
+                tipo: 'Recarga',
+                data: formatarData(),
+                detalhe: `${kwh} kWh (R$ ${tarifaFinal.toFixed(2)}/kWh)`,
+                custoEletrico: custoRecarga,
+                custoGasolina: 0
+            });
+
+            recalcularTotais();
             document.getElementById('injetado').value = '';
+            calcularPreviaRecarga();
             
-            let nomeOrigem = db.origemSelecionada.toUpperCase();
-            enviarTelegram(`🔌 *NOVA RECARGA REGISTRADA*\n\nInjetado: ${kwh} kWh\nOrigem: ${nomeOrigem}\nTarifa: R$ ${tarifaFinal.toFixed(2)}\n*Custo cobrado: R$ ${custoRecarga.toFixed(2)}*\n\nTotal Histórico EV: R$ ${db.gastoEV.toFixed(2)}`);
-            alert("Recarga computada com sucesso!");
+            enviarTelegram(`🔌 *Recarga Adicionada*\nInjetado: ${kwh} kWh\nCusto: R$ ${custoRecarga.toFixed(2)}`);
         }
 
         function salvarViagem() {
             let km = parseFloat(document.getElementById('kmRodados').value);
-            let ef = parseFloat(document.getElementById('eficienciaTrip').value);
-            let gas = parseFloat(document.getElementById('precoGas').value);
+            let kwh100 = parseFloat(document.getElementById('eficienciaTrip').value);
+            let precoGas = parseFloat(document.getElementById('precoGas').value);
 
-            if(!km || !ef || !gas) return alert("Preencha KM, Eficiência e Gasolina para calcular o ciclo.");
+            if(!km || !kwh100 || !precoGas) return alert("Preencha KM, Média e Gasolina.");
 
-            // Calcula o custo se fosse gasolina
-            let custoGas = (km / MEDIA_PADRAO_GAS) * gas;
-            db.gastoGas += custoGas;
-
-            // Calcula o custo elétrico apenas para demonstração da viagem (usa a ultima tarifa conhecida)
-            let custoEletricoDaViagem = (km / ef) * db.ultimaTarifa;
+            let kwhUsados = (kwh100 / 100) * km;
+            let litrosUsados = (km / REF_KM_L_GASOLINA);
+            let custoGas = litrosUsados * precoGas;
+            
+            let custoEletricoDaViagem = kwhUsados * db.ultimaTarifa;
             let economiaDaViagem = custoGas - custoEletricoDaViagem;
 
             db.ultimaViagem = {
                 km: km,
-                eficiencia: ef,
+                eficienciaEV: kwh100,
+                kwhUsados: kwhUsados,
+                litrosUsados: litrosUsados,
                 economia: economiaDaViagem
             };
 
-            localStorage.setItem('byd_app_data_v2', JSON.stringify(db));
-            atualizarTela();
+            db.historico.push({
+                id: Date.now(),
+                tipo: 'Viagem',
+                data: formatarData(),
+                detalhe: `Rodou ${km}km (Média: ${kwh100} kWh/100km)`,
+                custoEletrico: 0,
+                custoGasolina: custoGas
+            });
 
+            recalcularTotais();
+            
             document.getElementById('kmRodados').value = '';
             document.getElementById('eficienciaTrip').value = '';
+            document.getElementById('visorPotencia').classList.add('hidden');
             
-            let economiaTotal = db.gastoGas - db.gastoEV;
-            enviarTelegram(`🚗 *NOVO CICLO / VIAGEM*\n\nRodou: ${km} km\nEficiência no painel: ${ef} km/kWh\nGasolina ref: R$ ${gas.toFixed(2)}\n\n*Economia nesta viagem: R$ ${economiaDaViagem.toFixed(2)}*\n\n💰 *ECONOMIA GLOBAL ACUMULADA: R$ ${economiaTotal.toFixed(2)}*`);
+            enviarTelegram(`🚗 *Viagem Adicionada*\nRodou: ${km} km\nPotência consumida: ${kwhUsados.toFixed(2)} kWh\nGasolina evitada: R$ ${custoGas.toFixed(2)}`);
         }
 
         function enviarTelegram(texto) {
             fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&parse_mode=Markdown&text=${encodeURIComponent(texto)}`);
         }
 
-        // Inicia a tela
         selecionarOrigem(db.origemSelecionada, db.ultimaTarifa);
         atualizarTela();
     </script>
