@@ -3,13 +3,11 @@ import json
 import urllib.request
 from urllib.error import HTTPError
 
-BOT_TOKEN = os.environ['TELEGRAM_TOKEN'].strip()
-CHAT_ID = str(os.environ['TELEGRAM_CHAT_ID']).strip()
-PANEL_URL = os.environ['PANEL_URL'].strip()
+BOT_TOKEN = os.environ.get('TELEGRAM_TOKEN', '').strip()
+CHAT_ID = str(os.environ.get('TELEGRAM_CHAT_ID', '')).strip()
 
-# Conserta automaticamente o link se faltar o https://
-if not PANEL_URL.startswith("http"):
-    PANEL_URL = "https://" + PANEL_URL
+# Aqui está a solução: o link direto, sem depender de segredos do GitHub!
+PANEL_URL = "https://renatocosta93.github.io/projeto-byd-dolphin/"
 
 try:
     with open('last_message_id.txt', 'r') as f:
@@ -41,6 +39,7 @@ try:
     new_id = res_data['result']['message_id']
     with open('last_message_id.txt', 'w') as f:
         f.write(str(new_id))
+    print("MENSAGEM ENVIADA COM SUCESSO NO TELEGRAM!")
 except HTTPError as e:
     erro_telegram = e.read().decode('utf-8')
     print("\n" + "="*50)
