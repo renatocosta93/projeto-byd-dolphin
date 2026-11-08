@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeto BYD Dolphin GS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans pb-10">
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-md">
+        <div class="bg-emerald-600 text-white p-5 text-center">
+            <h1 class="text-2xl font-bold">⚡ BYD Dolphin GS</h1>
+        </div>
+
+        <div class="p-5 border-b border-gray-200">
+            <h2 class="text-sm font-bold text-gray-500 uppercase mb-2">💰 Amortização do Veículo</h2>
+            <div class="flex justify-between text-sm mb-1">
+                <span>Valor: R$ 119.990,00</span>
+                <span class="font-bold text-emerald-600">Economia: R$ <span id="valEconomia">0,00</span></span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-4">
+                <div id="barraProgresso" class="bg-emerald-500 h-4 rounded-full" style="width: 0%"></div>
+            </div>
+            <div class="text-right text-xs text-gray-500 mt-1"><span id="pctAmortizacao">0.00</span>% amortizado</div>
+        </div>
+
+        <div class="p-5">
+            <h2 class="text-sm font-bold text-gray-500 uppercase mb-4">➕ Registrar Recarga / Rota</h2>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Energia (kWh)</label>
+                    <input type="number" id="injetado" class="w-full p-2 border rounded bg-gray-50" placeholder="Ex: 15.5">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Eficiência (km/kWh)</label>
+                    <input type="number" id="eficienciaEl" class="w-full p-2 border rounded bg-gray-50" placeholder="Ex: 11.5">
+                </div>
+            </div>
+
+            <div class="mb-4 p-3 bg-amber-50 rounded border border-amber-100">
+                <label class="block text-xs font-semibold mb-2 text-amber-800">Origem da Energia</label>
+                <select id="origem" class="w-full p-2 border rounded bg-white mb-2" onchange="ajustarTarifa()">
+                    <option value="solar">☀️ Geração Solar (Dia)</option>
+                    <option value="rede">🌙 Rede Elétrica (Noite)</option>
+                    <option value="posto">🔌 Eletroposto</option>
+                </select>
+                <div class="flex items-center">
+                    <span class="text-sm mr-2 text-gray-600">Custo (R$/kWh):</span>
+                    <input type="number" id="tarifaEl" class="w-24 p-1 border rounded bg-white" value="0.00" disabled>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-6 p-3 bg-gray-100 rounded">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Gasolina (R$/L)</label>
+                    <input type="number" id="precoGas" class="w-full p-2 border rounded bg-white" value="5.79">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Ref. Combustão (km/L)</label>
+                    <input type="number" id="eficienciaGas" class="w-full p-2 border rounded bg-white" value="12.0">
+                </div>
+            </div>
+
+            <button onclick="registrar()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded shadow hover:bg-emerald-700">
+                Calcular e Salvar Registro
+            </button>
+            <div id="msgSucesso" class="hidden mt-3 text-center text-emerald-600 font-semibold text-sm">Registro salvo com sucesso!</div>
+        </div>
+    </div>
+
+    <script>
+        // === ATENÇÃO: COLE SEUS DADOS AQUI ===
+        const TELEGRAM_TOKEN = "9273439983:AAHIS4JHsG77p7g5R1B-RVQiyacRibGJhIw";
+        const CHAT_ID = "1020154663";
+        // =====================================
+        
+        const VALOR_CARRO = 119990.00;
+        let economiaAcumulada = parseFloat(localStorage.getItem('economiaBYD')) || 0;
+
+        function atualizarTela() {
+            document.getElementById('valEconomia').innerText = economiaAcumulada.toFixed(2).replace('.', ',');
+            let percentual = (economiaAcumulada / VALOR_CARRO) * 100;
+            document.getElementById('pctAmortizacao').innerText = percentual.toFixed(3);
+            document.getElementById('barraProgresso').style.width = Math.min(percentual, 100) + '%';
+        }
+
+        function ajustarTarifa() {
+            const origem = document.getElementById('origem').value;
+            const campo = document.getElementById('tarifaEl');
+            if(origem === 'solar') { campo.value = '0.00'; campo.disabled = true; }
+            else if(origem === 'rede') { campo.value = '0.85'; campo.disabled = false; }
+            else { campo.value = '2.10'; campo.disabled = false; }
+        }
+
+        async function registrar() {
+            const injetado = parseFloat(document.getElementById('injetado').value);
+            const efEl = parseFloat(document.getElementById('eficienciaEl').value);
+            const tarifaEl = parseFloat(document.getElementById('tarifaEl').value);
+            const precoGas = parseFloat(document.getElementById('precoGas').value);
+            const efGas = parseFloat(document.getElementById('eficienciaGas').value);
+
+            if(!injetado || !efEl || !precoGas || !efGas) return alert("Preencha todos os campos!");
+
+            const kmRodados = injetado * efEl;
+            const custoEletrico = injetado * tarifaEl;
+            const litrosSimulados = kmRodados / efGas;
+            const custoGasolina = litrosSimulados * precoGas;
+            const economiaLiquida = custoGasolina - custoEletrico;
+
+            economiaAcumulada += economiaLiquida;
+            localStorage.setItem('economiaBYD', economiaAcumulada);
+            atualizarTela();
+
+            document.getElementById('injetado').value = '';
+            const msgBox = document.getElementById('msgSucesso');
+            msgBox.classList.remove('hidden');
+            setTimeout(() => msgBox.classList.add('hidden'), 3000);
+
+            if (TELEGRAM_TOKEN !== "COLOQUE_SEU_TOKEN_AQUI") {
+                const texto = `⚡ *Nova Recarga BYD*\nAutonomia gerada: ${kmRodados.toFixed(1)} km\nEconomia líquida gerada: R$ ${economiaLiquida.toFixed(2)}\n\n💰 *Amortização Total: R$ ${economiaAcumulada.toFixed(2)}*`;
+                fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&parse_mode=Markdown&text=${encodeURIComponent(texto)}`);
+            }
+        }
+
+        atualizarTela();
+    </script>
+</body>
+</html>
